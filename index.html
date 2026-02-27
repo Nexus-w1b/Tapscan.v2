@@ -1,0 +1,1059 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tapscan v2</title>
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- QR Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    
+    <!-- Barcode Library -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, orderBy, limit, getDocs, updateDoc, increment, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCTOvUUxt_vMi75vLXIP-ASTFU87bUKzyk",
+            authDomain: "volca-tools.firebaseapp.com",
+            projectId: "volca-tools",
+            storageBucket: "volca-tools.firebasestorage.app",
+            messagingSenderId: "262525907487",
+            appId: "1:262525907487:web:4abc37fa3b583223569b2a",
+            measurementId: "G-Q6W58HE2B3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        window.auth = auth;
+        window.db = db;
+        window.storage = storage;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.signOut = signOut;
+        window.onAuthStateChanged = onAuthStateChanged;
+        window.GoogleAuthProvider = GoogleAuthProvider;
+        window.signInWithPopup = signInWithPopup;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.query = query;
+        window.where = where;
+        window.orderBy = orderBy;
+        window.limit = limit;
+        window.getDocs = getDocs;
+        window.updateDoc = updateDoc;
+        window.increment = increment;
+        window.deleteDoc = deleteDoc;
+        window.ref = ref;
+        window.uploadString = uploadString;
+        window.getDownloadURL = getDownloadURL;
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        /* ===== LOGIN PAGE ===== */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .login-box {
+            background: rgba(18, 18, 26, 0.95);
+            border-radius: 40px;
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            border: 1px solid rgba(255,51,102,0.3);
+            box-shadow: 0 20px 40px rgba(255,51,102,0.2);
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-logo .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff3366, #ff6b3d);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 20px;
+            transform: rotate(-5deg);
+        }
+
+        .login-logo h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #ff3366);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-input {
+            width: 100%;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 30px;
+            padding: 16px 20px;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #ff3366, #ff6b3d);
+            border: none;
+            border-radius: 30px;
+            padding: 16px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+
+        .google-btn {
+            width: 100%;
+            background: white;
+            border: none;
+            border-radius: 30px;
+            padding: 16px;
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+
+        /* ===== MAIN APP ===== */
+        .main-app {
+            display: none;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .main-header {
+            max-width: 1400px;
+            margin: 0 auto 20px;
+            background: rgba(18, 18, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 60px;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255,215,0,0.3);
+        }
+
+        .premium-header {
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 20px rgba(255,215,0,0.3);
+        }
+
+        .premium-badge {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 10px;
+        }
+
+        .limit-badge {
+            background: rgba(255,51,102,0.2);
+            border: 1px solid #ff3366;
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-size: 12px;
+        }
+
+        /* ===== PREMIUM MODAL ===== */
+        .premium-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+        }
+
+        .pricing-card {
+            background: #1a1a1a;
+            border-radius: 40px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            border: 2px solid #ffd700;
+        }
+
+        .price-tag {
+            font-size: 48px;
+            font-weight: 800;
+            color: #ffd700;
+            margin: 20px 0;
+        }
+
+        .feature-list {
+            margin: 20px 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .payment-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 20px;
+            padding: 15px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .payment-btn:hover {
+            background: rgba(255,215,0,0.2);
+            border-color: #ffd700;
+        }
+
+        /* ===== ADMIN PANEL ===== */
+        .admin-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.98);
+            backdrop-filter: blur(10px);
+            z-index: 30000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .admin-card {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid #ff3366;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .admin-table th, .admin-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .admin-table tr:hover {
+            background: rgba(255,51,102,0.1);
+        }
+
+        .approve-btn {
+            background: #00cc88;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .reject-btn {
+            background: #ff3366;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        /* ===== API MODAL ===== */
+        .api-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+        }
+
+        .api-key-box {
+            background: #1a1a1a;
+            border-radius: 40px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .api-key {
+            background: #333;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            margin: 20px 0;
+            word-break: break-all;
+        }
+
+        /* ===== RESTRICTED FEATURES ===== */
+        .premium-only {
+            position: relative;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .premium-only::after {
+            content: '💎 PREMIUM';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ffd700;
+            color: #000;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+      .premium-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN PAGE -->
+    <div class="login-container" id="loginPage">
+        <div class="login-box">
+            <div class="login-logo">
+                <div class="logo-icon">🚀</div>
+                <h1>TAPSCAN</h1>
+                <p style="color:#888; margin-top:10px;">by volca</p>
+            </div>
+
+            <div id="loginForm">
+                <input type="email" id="loginEmail" class="login-input" placeholder="Email">
+                <input type="password" id="loginPassword" class="login-input" placeholder="Password">
+                
+                <button class="login-btn" onclick="handleLogin()">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+
+                <div style="display: flex; gap: 10px; margin: 10px 0;">
+                    <button class="google-btn" style="flex:1;" onclick="handleGoogleLogin()">
+                        <i class="fab fa-google"></i>
+                    </button>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px; color:#888;">
+                    Belum punya akun? <span style="color:#ff3366; cursor:pointer;" onclick="showRegister()">Register</span>
+                </div>
+            </div>
+
+            <div id="registerForm" style="display: none;">
+                <input type="text" id="regName" class="login-input" placeholder="Nama">
+                <input type="email" id="regEmail" class="login-input" placeholder="Email">
+                <input type="password" id="regPassword" class="login-input" placeholder="Password">
+                
+                <button class="login-btn" onclick="handleRegister()">
+                    <i class="fas fa-user-plus"></i> Register
+                </button>
+
+                <div style="text-align: center; margin-top: 20px; color:#888;">
+                    Sudah punya akun? <span style="color:#ff3366; cursor:pointer;" onclick="showLogin()">Login</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="main-app" id="mainApp">
+        <!-- HEADER -->
+        <div class="main-header" id="mainHeader">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="logo-icon" style="width:40px; height:40px; font-size:20px;">🌐</div>
+                <div>
+                    <h2>Tapscan v2</h2>
+                </div>
+                <span class="premium-badge" id="premiumBadge" style="display:none;">PREMIUM</span>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="limit-badge" id="limitBadge">
+                    <span id="usedCount">0</span>/<span id="limitCount">20</span>
+                </div>
+                <div class="settings-menu">
+                    <div class="hamburger" onclick="toggleMenu()">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <div class="dropdown-menu" id="settingsMenu">
+                        <div class="menu-item" onclick="showProfile()">
+                            <i class="fas fa-user"></i> Profil Saya
+                        </div>
+                        <div class="menu-item" onclick="showHistory()">
+                            <i class="fas fa-history"></i> Riwayat
+                        </div>
+                        <div class="menu-item" onclick="showSaved()">
+                            <i class="fas fa-save"></i> Tersimpan
+                        </div>
+                        <div class="menu-item" onclick="showStats()">
+                            <i class="fas fa-chart-line"></i> Statistik
+                        </div>
+                        <div class="menu-item" onclick="showApiKeys()">
+                            <i class="fas fa-key"></i> API Keys
+                        </div>
+                        <div class="menu-divider"></div>
+                        <div class="menu-item" onclick="upgradePremium()">
+                            <i class="fas fa-crown" style="color:#ffd700;"></i> Upgrade Premium
+                        </div>
+                        <div class="menu-item" onclick="showPaymentHistory()">
+                            <i class="fas fa-receipt"></i> Riwayat Pembayaran
+                        </div>
+                        <div class="menu-divider"></div>
+                        <div class="menu-item" onclick="contactDev()">
+                            <i class="fab fa-whatsapp"></i> Hubungi Developer
+                        </div>
+                        <div class="menu-item" onclick="reportBug()">
+                            <i class="fas fa-bug"></i> Laporkan Bug
+                        </div>
+                        <div class="menu-item" id="adminMenuItem" style="display:none;" onclick="openAdminPanel()">
+                            <i class="fas fa-shield-alt" style="color:#ff3366;"></i> Admin Panel
+                        </div>
+                        <div class="menu-divider"></div>
+                        <div class="menu-item" onclick="handleLogout()" style="color:#ff3366;">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </div>
+                    </div>
+                </div>
+                <div class="user-avatar" id="userAvatar">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- USAGE WARNING -->
+        <div id="limitWarning" style="display:none; max-width:1400px; margin:10px auto; background:#ff3366; padding:10px; border-radius:30px; text-align:center;">
+            <i class="fas fa-exclamation-triangle"></i> Limit harian tercapai! <span style="cursor:pointer; text-decoration:underline;" onclick="upgradePremium()">Upgrade Premium</span> untuk unlimited.
+        </div>
+
+        <!-- TABS (PREMIUM RESTRICTED) -->
+        <div class="main-tabs" id="mainTabs">
+            <button class="tab-btn active" data-tab="qr"><i class="fas fa-qrcode"></i> QR Code</button>
+            <button class="tab-btn" data-tab="barcode"><i class="fas fa-barcode"></i> Barcode</button>
+            <button class="tab-btn premium-feature" data-tab="batch"><i class="fas fa-layer-group"></i> Batch</button>
+            <button class="tab-btn premium-feature" data-tab="dynamic"><i class="fas fa-sync-alt"></i> Dynamic</button>
+            <button class="tab-btn premium-feature" data-tab="templates"><i class="fas fa-palette"></i> Templates</button>
+            <button class="tab-btn premium-feature" data-tab="scanner"><i class="fas fa-camera"></i> Scanner</button>
+            <button class="tab-btn premium-feature" data-tab="analytics"><i class="fas fa-chart-line"></i> Analytics</button>
+        </div>
+
+        <!-- MAIN CONTENT (SINGKAT) - SISA KODE SAMA KAYA SEBELUMNYA TAPI DIPOTONG BIAR GA KEPANJANGAN -->
+        <!-- ... (sisa HTML sama dengan sebelumnya) ... -->
+    </div>
+
+    <!-- PREMIUM MODAL -->
+    <div class="premium-modal" id="premiumModal">
+        <div class="pricing-card">
+            <h2 style="text-align:center;">💎 Upgrade ke Premium</h2>
+            <p style="text-align:center; color:#888; margin-top:10px;">Akses semua fitur tanpa batas!</p>
+            
+            <div class="price-tag">Rp 20K <small style="font-size:14px;">/bulan</small></div>
+            
+            <div class="feature-list">
+                <div class="feature-item"><i class="fas fa-check" style="color:#00cc88;"></i> Unlimited QR Generation</div>
+                <div class="feature-item"><i class="fas fa-check" style="color:#00cc88;"></i> Batch (1000+ QR)</div>
+                <div class="feature-item"><i class="fas fa-check" style="color:#00cc88;"></i> Dynamic QR</div>
+                <div class="feature-item"><i class="fas fa-check" style="color:#00cc88;"></i> Premium Templates</div>
+                <div class="feature-item"><i class="fas fa-check" style="color:#00cc88;"></i> Analytics Dashboard</div>
+                <div class="feature-item"><i class="fas fa-check" style="color:#00cc88;"></i> API Access</div>
+                <div class="feature-item"><i class="fas fa-check" style="color:#00cc88;"></i> Priority Support</div>
+            </div>
+
+            <div class="payment-methods">
+                <div class="payment-btn" onclick="showPayment('dana')">
+                    <i class="fas fa-phone-alt"></i> Dana
+                </div>
+                <div class="payment-btn" onclick="showPayment('ovo')">
+                    <i class="fas fa-mobile-alt"></i> OVO
+                </div>
+                <div class="payment-btn" onclick="showPayment('gopay')">
+                    <i class="fas fa-wallet"></i> GoPay
+                </div>
+                <div class="payment-btn" onclick="showPayment('transfer')">
+                    <i class="fas fa-university"></i> Transfer
+                </div>
+            </div>
+
+            <div id="paymentDetails" style="display:none; margin-top:20px; padding:20px; background:#333; border-radius:20px;">
+                <h4>Nomor Pembayaran:</h4>
+                <p style="font-size:24px; color:#ffd700; margin:10px 0;" id="paymentNumber">088225879928</p>
+                <p style="color:#888;">a.n Mustofa</p>
+                <button class="login-btn" onclick="uploadPaymentProof()">Upload Bukti</button>
+                <input type="file" id="proofInput" accept="image/*" style="display:none;">
+            </div>
+
+            <button class="login-btn" style="margin-top:20px;" onclick="closePremiumModal()">Tutup</button>
+        </div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div class="admin-panel" id="adminPanel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2><i class="fas fa-shield-alt" style="color:#ff3366;"></i> Admin Dashboard</h2>
+            <button class="login-btn" style="width:auto; padding:10px 20px;" onclick="closeAdminPanel()">Tutup</button>
+        </div>
+
+        <div class="admin-stats">
+            <div class="admin-card">
+                <h3>Total Users</h3>
+                <p style="font-size:32px; color:#ff3366;" id="totalUsers">0</p>
+            </div>
+            <div class="admin-card">
+                <h3>Premium Users</h3>
+                <p style="font-size:32px; color:#ffd700;" id="premiumUsers">0</p>
+            </div>
+            <div class="admin-card">
+                <h3>Pending Payments</h3>
+                <p style="font-size:32px; color:#ffaa00;" id="pendingPayments">0</p>
+            </div>
+            <div class="admin-card">
+                <h3>Total Revenue</h3>
+                <p style="font-size:32px; color:#00cc88;" id="totalRevenue">Rp0</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <h3>Pending Verifikasi Pembayaran</h3>
+            <table class="admin-table" id="paymentsTable">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Paket</th>
+                        <th>Metode</th>
+                        <th>Bukti</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentsBody">
+                    <!-- DIISI JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <h3>Daftar Users</h3>
+            <table class="admin-table" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Nama</th>
+                        <th>Plan</th>
+                        <th>Generate</th>
+                        <th>Expired</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="usersBody">
+                    <!-- DIISI JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- API MODAL -->
+    <div class="api-modal" id="apiModal">
+        <div class="api-key-box">
+            <h2><i class="fas fa-key" style="color:#ffd700;"></i> API Access</h2>
+            <p style="margin:20px 0; color:#888;">Gunakan API key ini untuk mengakses Topscan secara penuh</p>
+            
+            <div class="api-key" id="apiKeyDisplay">⚡ Generate key untuk mendapatkan akses</div>
+            
+            <button class="login-btn" onclick="generateApiKey()">Generate New Key</button>
+            <button class="google-btn" style="margin-top:10px;" onclick="copyApiKey()">Copy Key</button>
+            <button class="login-btn" style="margin-top:10px;" onclick="closeApiModal()">Tutup</button>
+        </div>
+    </div>
+
+  <script>
+        // ========== GLOBAL VARIABLES ==========
+        let currentUser = null;
+        let userPlan = 'free';
+        let userData = {};
+        let generateCount = 0;
+        const FREE_LIMIT = 20;
+        const PREMIUM_LIMIT = 999999;
+
+        // ========== AUTH STATE ==========
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                await loadUserData();
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                checkAdminStatus();
+            } else {
+                currentUser = null;
+                document.getElementById('loginPage').style.display = 'flex';
+                document.getElementById('mainApp').style.display = 'none';
+            }
+        });
+
+        // ========== LOAD USER DATA ==========
+        async function loadUserData() {
+            if (!currentUser) return;
+            
+            const userRef = doc(db, 'users', currentUser.uid);
+            const userSnap = await getDoc(userRef);
+            
+            if (userSnap.exists()) {
+                userData = userSnap.data();
+                userPlan = userData.plan || 'free';
+                generateCount = userData.generateCount || 0;
+                
+                // Update UI
+                document.getElementById('usedCount').textContent = generateCount;
+                document.getElementById('limitCount').textContent = userPlan === 'premium' ? '∞' : FREE_LIMIT;
+                
+                if (userPlan === 'premium') {
+                    document.getElementById('mainHeader').classList.add('premium-header');
+                    document.getElementById('premiumBadge').style.display = 'inline';
+                }
+                
+                // Check limit
+                if (userPlan !== 'premium' && generateCount >= FREE_LIMIT) {
+                    document.getElementById('limitWarning').style.display = 'block';
+                    disablePremiumFeatures();
+                } else {
+                    document.getElementById('limitWarning').style.display = 'none';
+                }
+            } else {
+                // User baru
+                await setDoc(userRef, {
+                    email: currentUser.email,
+                    name: currentUser.displayName || currentUser.email.split('@')[0],
+                    plan: 'free',
+                    generateCount: 0,
+                    createdAt: new Date().toISOString()
+                });
+                userPlan = 'free';
+                generateCount = 0;
+            }
+            
+            checkAdminStatus();
+        }
+
+        // ========== CHECK ADMIN ==========
+        async function checkAdminStatus() {
+            if (!currentUser) return;
+            
+            const adminRef = doc(db, 'admins', currentUser.uid);
+            const adminSnap = await getDoc(adminRef);
+            
+            if (adminSnap.exists() || currentUser.email === 'visi4ura@gmail.com') {
+                document.getElementById('adminMenuItem').style.display = 'flex';
+            }
+        }
+
+        // ========== PREMIUM FEATURES ==========
+        function disablePremiumFeatures() {
+            document.querySelectorAll('.premium-feature').forEach(el => {
+                el.style.opacity = '0.5';
+                el.style.pointerEvents = 'none';
+            });
+        }
+
+        function enablePremiumFeatures() {
+            document.querySelectorAll('.premium-feature').forEach(el => {
+                el.style.opacity = '1';
+                el.style.pointerEvents = 'auto';
+            });
+        }
+
+        // ========== CHECK GENERATE LIMIT ==========
+        async function checkLimit() {
+            if (userPlan === 'premium') return true;
+            
+            if (generateCount >= FREE_LIMIT) {
+                showToast('Limit harian tercapai! Upgrade premium untuk unlimited');
+                upgradePremium();
+                return false;
+            }
+            return true;
+        }
+
+        // ========== INCREMENT COUNT ==========
+        async function incrementCount() {
+            if (!currentUser) return;
+            
+            generateCount++;
+            await updateDoc(doc(db, 'users', currentUser.uid), {
+                generateCount: increment(1)
+            });
+            
+            document.getElementById('usedCount').textContent = generateCount;
+            
+            if (userPlan !== 'premium' && generateCount >= FREE_LIMIT) {
+                document.getElementById('limitWarning').style.display = 'block';
+                disablePremiumFeatures();
+            }
+        }
+
+        // ========== UPGRADE PREMIUM ==========
+        function upgradePremium() {
+            document.getElementById('premiumModal').style.display = 'flex';
+        }
+
+        function closePremiumModal() {
+            document.getElementById('premiumModal').style.display = 'none';
+            document.getElementById('paymentDetails').style.display = 'none';
+        }
+
+        function showPayment(method) {
+            document.getElementById('paymentDetails').style.display = 'block';
+            document.getElementById('paymentNumber').textContent = '088225879928';
+        }
+
+        function uploadPaymentProof() {
+            document.getElementById('proofInput').click();
+        }
+
+        document.getElementById('proofInput').addEventListener('change', async (e) => {
+            if (e.target.files[0] && currentUser) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = async (event) => {
+                    // Simpan ke Firebase sebagai pending payment
+                    await addDoc(collection(db, 'payments'), {
+                        userId: currentUser.uid,
+                        userEmail: currentUser.email,
+                        amount: 20000,
+                        package: 'monthly',
+                        method: 'dana',
+                        proof: event.target.result,
+                        status: 'pending',
+                        createdAt: new Date().toISOString()
+                    });
+                    
+                    showToast('Bukti terkirim! Menunggu verifikasi admin');
+                    closePremiumModal();
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // ========== ADMIN FUNCTIONS ==========
+        async function openAdminPanel() {
+            document.getElementById('adminPanel').style.display = 'block';
+            await loadAdminData();
+        }
+
+        function closeAdminPanel() {
+            document.getElementById('adminPanel').style.display = 'none';
+        }
+
+        async function loadAdminData() {
+            // Load users
+            const usersSnapshot = await getDocs(collection(db, 'users'));
+            const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            document.getElementById('totalUsers').textContent = users.length;
+            document.getElementById('premiumUsers').textContent = users.filter(u => u.plan === 'premium').length;
+            
+            // Load pending payments
+            const paymentsSnapshot = await getDocs(query(collection(db, 'payments'), where('status', '==', 'pending')));
+            const payments = paymentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            document.getElementById('pendingPayments').textContent = payments.length;
+            
+            // Render payments table
+            const tbody = document.getElementById('paymentsBody');
+            tbody.innerHTML = payments.map(p => `
+                <tr>
+                    <td>${p.userEmail}</td>
+                    <td>${p.userEmail}</td>
+                    <td>${p.package}</td>
+                    <td>${p.method}</td>
+                    <td><img src="${p.proof}" style="width:50px; height:50px; border-radius:10px;"></td>
+                    <td>
+                        <button class="approve-btn" onclick="approvePayment('${p.id}', '${p.userId}')">Approve</button>
+                        <button class="reject-btn" onclick="rejectPayment('${p.id}')">Reject</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // Render users table
+            const usersBody = document.getElementById('usersBody');
+            usersBody.innerHTML = users.map(u => `
+                <tr>
+                    <td>${u.email}</td>
+                    <td>${u.name || '-'}</td>
+                    <td>${u.plan || 'free'}</td>
+                    <td>${u.generateCount || 0}</td>
+                    <td>${u.expiredDate || '-'}</td>
+                    <td>
+                        <button class="approve-btn" onclick="togglePremium('${u.id}', '${u.plan === 'premium' ? 'free' : 'premium'}')">
+                            ${u.plan === 'premium' ? 'Downgrade' : 'Upgrade'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function approvePayment(paymentId, userId) {
+            await updateDoc(doc(db, 'payments', paymentId), { status: 'approved' });
+            
+            // Upgrade user ke premium (30 hari)
+            const expiredDate = new Date();
+            expiredDate.setDate(expiredDate.getDate() + 30);
+            
+            await updateDoc(doc(db, 'users', userId), {
+                plan: 'premium',
+                premiumSince: new Date().toISOString(),
+                expiredDate: expiredDate.toISOString()
+            });
+            
+            showToast('Payment approved! User upgraded');
+            loadAdminData();
+        }
+
+        async function rejectPayment(paymentId) {
+            await updateDoc(doc(db, 'payments', paymentId), { status: 'rejected' });
+            showToast('Payment rejected');
+            loadAdminData();
+        }
+
+        async function togglePremium(userId, newPlan) {
+            await updateDoc(doc(db, 'users', userId), { plan: newPlan });
+            showToast(`User ${newPlan} sekarang`);
+            loadAdminData();
+        }
+
+        // ========== API FUNCTIONS ==========
+        function showApiKeys() {
+            if (userPlan !== 'premium') {
+                showToast('API Access hanya untuk premium!');
+                upgradePremium();
+                return;
+            }
+            document.getElementById('apiModal').style.display = 'flex';
+        }
+
+        function closeApiModal() {
+            document.getElementById('apiModal').style.display = 'none';
+        }
+
+        async function generateApiKey() {
+            if (!currentUser) return;
+            
+            const apiKey = 'volca_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            
+            await setDoc(doc(db, 'api_keys', currentUser.uid), {
+                key: apiKey,
+                createdAt: new Date().toISOString(),
+                usage: 0
+            });
+
+    document.getElementById('apiKeyDisplay').textContent = apiKey;
+            showToast('API Key generated!');
+        }
+
+        function copyApiKey() {
+            const key = document.getElementById('apiKeyDisplay').textContent;
+            if (key && !key.includes('Generate')) {
+                navigator.clipboard.writeText(key);
+                showToast('API Key copied!');
+            }
+        }
+
+        // ========== AUTH FUNCTIONS ==========
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPassword').value;
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch (error) {
+                showToast('Error: ' + error.message);
+            }
+        }
+
+        async function handleRegister() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const pass = document.getElementById('regPassword').value;
+            
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+                const user = userCredential.user;
+                
+                await setDoc(doc(db, 'users', user.uid), {
+                    name: name || email.split('@')[0],
+                    email: email,
+                    plan: 'free',
+                    generateCount: 0,
+                    createdAt: new Date().toISOString()
+                });
+                
+                showToast('Registrasi berhasil!');
+            } catch (error) {
+                showToast('Error: ' + error.message);
+            }
+        }
+
+        async function handleGoogleLogin() {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                showToast('Error: ' + error.message);
+            }
+        }
+
+        async function handleLogout() {
+            await signOut(auth);
+        }
+
+        function showRegister() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        }
+
+        function showLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+
+        // ========== GENERATE QR (DENGAN LIMIT) ==========
+        async function generateQR() {
+            if (!await checkLimit()) return;
+            
+            // ... (kode generate QR sama seperti sebelumnya)
+            
+            await incrementCount();
+        }
+
+        // ========== UTILITIES ==========
+        function showToast(msg) {
+            alert(msg); // Ganti dengan toast kalo mau
+        }
+
+        function toggleMenu() {
+            document.getElementById('settingsMenu').classList.toggle('show');
+        }
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.settings-menu')) {
+                document.getElementById('settingsMenu').classList.remove('show');
+            }
+        });
+
+        function contactDev() {
+            window.open('https://wa.me/6288225879928?text=Halo%20Mustofa%2C%20saya%20mau%20tanya%20tentang%20tapscan%20ini', '_blank');
+        }
+
+        function reportBug() {
+            window.open('https://wa.me/6288225879928?text=Halo%20Mustofa%2C%20saya%20menemukan%20bug%20di%20tapscan%20ini%3A%0A%0A', '_blank');
+        }
+    </script>
+</body>
+</html>
